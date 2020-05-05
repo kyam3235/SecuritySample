@@ -36,6 +36,11 @@ class FirstFragment : Fragment() {
         button_write_file.setOnClickListener{
             createEncryptedFile()
         }
+
+        button_read_file.setOnClickListener {
+            val contents = readEncryptedFile()
+            textview_first.text = contents
+        }
     }
 
     /**
@@ -69,5 +74,30 @@ class FirstFragment : Fragment() {
         }
 
         Log.d("暗号化ファイルのパス", context.filesDir.toString())
+    }
+
+    private fun readEncryptedFile(): String{
+        val context = requireContext()
+        val dir = context.filesDir
+
+        // マスターキーの作成
+        val keyGenParameterSpec = MasterKeys.AES256_GCM_SPEC
+        val masterKeyAlias = MasterKeys.getOrCreate(keyGenParameterSpec)
+
+        val fileToRead = "my_sensitive_data.txt"
+        val encryptedFile = EncryptedFile.Builder(
+            File(dir, fileToRead),
+            context,
+            masterKeyAlias,
+            EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB
+        ).build()
+
+        return encryptedFile.openFileInput()
+            .bufferedReader()
+            .useLines { lines ->
+                lines.fold(""){working, line ->
+                    "$working\n$line"
+                }
+            }
     }
 }

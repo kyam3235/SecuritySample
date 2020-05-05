@@ -10,4 +10,5 @@
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="create_encrypted_file">暗号化ファイルの作成</string>
+    <string name="read_encrypted_file">暗号化ファイルの読み込み</string>
 </resources>
