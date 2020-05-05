@@ -76,6 +76,12 @@ class FirstFragment : Fragment() {
         Log.d("暗号化ファイルのパス", context.filesDir.toString())
     }
 
+    /**
+     * 暗号化したファイルの読み込み
+     * <p>
+     * 参考: {@link https://developer.android.com/topic/security/data?hl=ja#write-files}
+     * </p>
+     */
     private fun readEncryptedFile(): String{
         val context = requireContext()
         val dir = context.filesDir
