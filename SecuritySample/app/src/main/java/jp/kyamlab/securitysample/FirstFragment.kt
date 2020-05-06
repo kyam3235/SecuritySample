@@ -1,5 +1,9 @@
 package jp.kyamlab.securitysample
 
+import android.app.Activity.RESULT_OK
+import android.app.KeyguardManager
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -10,6 +14,7 @@ import android.widget.Button
 import androidx.navigation.fragment.findNavController
 import androidx.security.crypto.EncryptedFile
 import androidx.security.crypto.MasterKeys
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_first.*
 import java.io.File
 
@@ -17,6 +22,8 @@ import java.io.File
  * A simple [Fragment] subclass as the default destination in the navigation.
  */
 class FirstFragment : Fragment() {
+
+    private lateinit var keyguardManager: KeyguardManager
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
@@ -29,6 +36,8 @@ class FirstFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        keyguardManager = requireContext().getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+
         view.findViewById<Button>(R.id.button_first).setOnClickListener {
             findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
         }
@@ -38,6 +47,18 @@ class FirstFragment : Fragment() {
         }
 
         button_read_file.setOnClickListener {
+            showAuthenticationScreen()
+        }
+
+        // デバイスロックが有効でないとユーザ認証ができない
+        if(!keyguardManager.isKeyguardSecure){
+            Snackbar.make(view, "デバイスロックを有効にしてください", Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode == REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS && resultCode == RESULT_OK){
             val contents = readEncryptedFile()
             textview_first.text = contents
         }
@@ -105,5 +126,21 @@ class FirstFragment : Fragment() {
                     "$working\n$line"
                 }
             }
+    }
+
+    /**
+     * デバイスロックの表示
+     */
+    private fun showAuthenticationScreen(){
+        // FIXME deprecatedではない方法に修正
+        val intent = keyguardManager.createConfirmDeviceCredentialIntent(null, null)
+        if (intent != null) {
+            startActivityForResult(intent, REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS)
+        }
+    }
+
+    companion object{
+        /** デバイスロックのリクエストコード */
+        private const val REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS = 0
     }
 }
