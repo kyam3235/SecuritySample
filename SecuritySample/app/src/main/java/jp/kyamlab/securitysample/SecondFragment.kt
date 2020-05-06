@@ -35,6 +35,10 @@ class SecondFragment : Fragment() {
         button_write_encrypted_shared_preferences.setOnClickListener {
             writeEncryptedSharedPreferences()
         }
+
+        button_read_encrypted_shared_preferences.setOnClickListener {
+            textview_second.text = readEncryptedSharedPreferences()
+        }
     }
 
     private fun writeEncryptedSharedPreferences(){
@@ -51,7 +55,28 @@ class SecondFragment : Fragment() {
             )
 
         sharedPreferences.edit()
-            .putString("SECRET_MESSAGE", "Hello world!")
+            .putString(SHARED_PREF_TAG, "Hello world!")
             .apply()
+    }
+
+    private fun readEncryptedSharedPreferences(): String{
+        val keyGenParameterSpec = MasterKeys.AES256_GCM_SPEC
+        val masterKeyAlias = MasterKeys.getOrCreate(keyGenParameterSpec)
+
+        val sharedPreferences =  EncryptedSharedPreferences
+            .create(
+                "my_secret",
+                masterKeyAlias,
+                requireContext(),
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+
+        val message = sharedPreferences.getString(SHARED_PREF_TAG, null)
+        return message ?: "message not found"
+    }
+
+    companion object{
+        private const val SHARED_PREF_TAG = "SECRET_MESSAGE"
     }
 }
