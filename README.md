@@ -9,6 +9,7 @@ AndroidX Securityのサンプルアプリ
 ## できること
 
 - 暗号化ファイルの読み書き
+- 暗号化した/されたSharedPreferencesの読み書き
 
 ## 参考
 
