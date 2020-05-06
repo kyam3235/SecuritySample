@@ -7,6 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.navigation.fragment.findNavController
+import androidx.security.crypto.EncryptedFile
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
+import kotlinx.android.synthetic.main.fragment_second.*
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
@@ -27,5 +31,27 @@ class SecondFragment : Fragment() {
         view.findViewById<Button>(R.id.button_second).setOnClickListener {
             findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
         }
+
+        button_write_encrypted_shared_preferences.setOnClickListener {
+            writeEncryptedSharedPreferences()
+        }
+    }
+
+    private fun writeEncryptedSharedPreferences(){
+        val keyGenParameterSpec = MasterKeys.AES256_GCM_SPEC
+        val masterKeyAlias = MasterKeys.getOrCreate(keyGenParameterSpec)
+
+        val sharedPreferences =  EncryptedSharedPreferences
+            .create(
+                "my_secret",
+                masterKeyAlias,
+                requireContext(),
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+
+        sharedPreferences.edit()
+            .putString("SECRET_MESSAGE", "Hello world!")
+            .apply()
     }
 }

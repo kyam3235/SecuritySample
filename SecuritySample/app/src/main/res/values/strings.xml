@@ -11,4 +11,5 @@
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="create_encrypted_file">暗号化ファイルの作成</string>
     <string name="read_encrypted_file">暗号化ファイルの読み込み</string>
+    <string name="write_encrypted_shared_preferences">暗号化してSharedPreferencesに書き込む</string>
 </resources>
