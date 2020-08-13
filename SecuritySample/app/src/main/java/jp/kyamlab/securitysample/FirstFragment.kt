@@ -5,18 +5,23 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.security.crypto.EncryptedFile
+import androidx.security.crypto.MasterKey
 import androidx.security.crypto.MasterKeys
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_first.*
 import java.io.File
+import java.lang.Exception
+import java.lang.RuntimeException
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
@@ -65,6 +70,32 @@ class FirstFragment : Fragment() {
     }
 
     /**
+     * MasterKeyの生成
+     *
+     * 指定しているパラメータは下記のパラメータで指定されていたもの
+     * val keyGenParameterSpec = MasterKeys.AES256_GCM_SPEC
+     * val masterKeyAlias = MasterKeys.getOrCreate(keyGenParameterSpec)
+     */
+    private fun getMasterKey(): MasterKey?{
+        try{
+        val spec: KeyGenParameterSpec = KeyGenParameterSpec.Builder(
+            "_androidx_security_master_key_",
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            .setKeySize(256)
+            .build()
+
+            return MasterKey.Builder(requireContext())
+                .setKeyGenParameterSpec(spec)
+                .build()
+        }catch (e: Exception){
+            Log.e("FirstFragment", "Error on getting master key", e);
+        }
+        return null
+    }
+
+    /**
      * 暗号化したファイルの作成
      * <p>
      * 参考: {@link https://developer.android.com/topic/security/data?hl=ja#write-files}
@@ -107,15 +138,13 @@ class FirstFragment : Fragment() {
         val context = requireContext()
         val dir = context.filesDir
 
-        // マスターキーの作成
-        val keyGenParameterSpec = MasterKeys.AES256_GCM_SPEC
-        val masterKeyAlias = MasterKeys.getOrCreate(keyGenParameterSpec)
-
         val fileToRead = "my_sensitive_data.txt"
+
+        val masterKey = getMasterKey() ?: throw RuntimeException("Masterkeyを取得できませんでした")
         val encryptedFile = EncryptedFile.Builder(
-            File(dir, fileToRead),
             context,
-            masterKeyAlias,
+            File(dir, fileToRead),
+            masterKey,
             EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB
         ).build()
 
